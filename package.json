@@ -1,0 +1,33 @@
+{
+  "name": "awoo-server",
+  "version": "1.0.0",
+  "description": "server side of awoo",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon --exec babel-node src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zachung/awoo-server.git"
+  },
+  "keywords": [
+    "awoo"
+  ],
+  "author": "zachung",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zachung/awoo-server/issues"
+  },
+  "homepage": "https://github.com/zachung/awoo-server#readme",
+  "dependencies": {
+    "awoo-core": "github:zachung/awoo-core",
+    "dotenv": "^8.2.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.11.0",
+    "@babel/node": "^7.10.5",
+    "@babel/preset-env": "^7.11.0",
+    "nodemon": "^2.0.4"
+  }
+}
