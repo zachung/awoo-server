@@ -22,7 +22,9 @@
   "homepage": "https://github.com/zachung/awoo-server#readme",
   "dependencies": {
     "awoo-core": "github:zachung/awoo-core",
-    "dotenv": "^8.2.0"
+    "chalk": "^4.1.0",
+    "dotenv": "^8.2.0",
+    "winston": "^3.3.3"
   },
   "devDependencies": {
     "@babel/core": "^7.11.0",

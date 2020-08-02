@@ -1,5 +1,7 @@
 import World from './World'
 import FileChunkReader from './FileChunkReader'
+import logger from './Logger'
+import readline from 'readline'
 
 const SaveDelayMicroSeconds = 10000
 
@@ -21,19 +23,16 @@ class Game {
     return this.world
       .loadChunk(0, 0)
       .then(() => this.worldSaveLoop())
-      .then(() => (this.isStart = true))
+      .then(() => this.afterStart())
   }
 
   worldSaveLoop () {
-    return new Promise((resolve, reject) => {
-      console.log('world saving...')
-      this.world.save().then(resolve)
-    })
+    return this.world.save()
       .then(() => {
-        console.log('world saved')
+        logger.info('world saved')
       })
       .catch(err => {
-        console.log(err)
+        logger.error(`world save failed ${err}`)
       })
       .finally(() => {
         // retry 5s after
@@ -41,6 +40,17 @@ class Game {
           this.worldSaveLoop()
         }, SaveDelayMicroSeconds)
       })
+  }
+
+  afterStart() {
+    this.isStart = true
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    })
+    rl.question('say hi', answer => {
+      console.log(answer)
+    })
   }
 }
 
