@@ -7,14 +7,12 @@ const { npm: { levels } } = config
 const myFormat = printf(({ level, message, label, timestamp }) => {
   let colors = {
     'info': chalk.blue,
+    'error': chalk.red
   }
   const s = `${level}: ${message}`
   return `${timestamp} [${label}] ${colors[level](s)}`
 })
 
-const console = new transports.Console({
-  handleExceptions: true
-})
 const logger = createLogger({
   format: combine(
     label({ label: chalk.yellow('System') }),
@@ -22,7 +20,9 @@ const logger = createLogger({
     myFormat
   ),
   transports: [
-    console
+    new transports.Console({
+      handleExceptions: true
+    })
   ],
   exitOnError: false
 })

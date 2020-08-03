@@ -1,7 +1,7 @@
 import World from './World'
 import FileChunkReader from './FileChunkReader'
 import logger from './Logger'
-import readline from 'readline'
+import { Item } from 'awoo-core'
 
 const SaveDelayMicroSeconds = 10000
 
@@ -14,6 +14,7 @@ class Game {
     this.world = new World({
       chunkReader: new FileChunkReader()
     })
+    this.players = {}
   }
 
   start () {
@@ -42,15 +43,26 @@ class Game {
       })
   }
 
-  afterStart() {
+  afterStart () {
     this.isStart = true
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
+  }
+
+  /**
+   * @param name
+   * @param x
+   * @param y
+   * @returns {Promise<Item>}
+   */
+  addPlayer ({ name, x, y }) {
+    if (this.players[name]) {
+      return Promise.resolve(this.players[name])
+    }
+    const player = new Item({
+      type: 2,
+      id: 0
     })
-    rl.question('say hi', answer => {
-      console.log(answer)
-    })
+    this.players[name] = player
+    return this.world.addItem(x, y, player).then(() => player)
   }
 }
 

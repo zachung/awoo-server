@@ -1,7 +1,13 @@
+import { createServer } from 'http'
+import Server from 'socket.io'
 import Game from './lib/Game'
+import events from './lib/events'
 
 const game = new Game()
 game.start()
-  .then(() => {
-    return game.world.move(0, 0, 1, 5)
-  })
+
+const server = createServer()
+const io = new Server(server)
+
+io.on('connect', events(game))
+server.listen(3000)

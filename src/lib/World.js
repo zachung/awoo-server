@@ -4,56 +4,72 @@ const ChunkSize = 32
 const round = p => ((p % ChunkSize) + ChunkSize) % ChunkSize
 const chunkOffset = p => Math.floor(p / ChunkSize)
 
-const chunkLoc = (x, y) => {
-  return x.toString() + '_' + y.toString()
-}
-
 const isEmpty = item => item.type === undefined
+
+const chunksHandler = reader => {
+  return {
+    get (target, chunkName, receiver) {
+      if (!target[chunkName]) {
+        const chunk = Chunk.fromName(chunkName)
+        target[chunkName] = chunk
+        // TODO: handle missed chunk
+        return chunk.loadWorld(reader).then(() => chunk)
+      }
+      return Promise.resolve(target[chunkName])
+    }
+  }
+}
 
 /**
  * @property {FileChunkReader} chunkReader
  */
 class World {
   constructor ({ chunkReader }) {
-    this.chunks = {}
+    this.chunks = new Proxy({}, chunksHandler(chunkReader))
     this.chunkReader = chunkReader
   }
 
+  /**
+   * move item
+   * @param fromX
+   * @param fromY
+   * @param toX
+   * @param toY
+   * @returns {Promise<Item>}
+   */
   move (fromX, fromY, toX, toY) {
-    const item = this.getChunkItem(fromX, fromY)
-    if (isEmpty(item)) {
-      // move air ?
-      return Promise.resolve()
-    }
-    const chunk = item.chunk
+    return this.getChunkItem(fromX, fromY)
+      .then(item => {
+        if (isEmpty(item)) {
+          throw Error(`someone try to move air(${fromX}, ${fromY}) to (${toX}, ${toY})`)
+        }
+        console.log(`item from (${item.x}, ${item.y}) moving to (${toX}, ${toY})`)
+        const chunk = item.chunk
+        return this.addItem(toX, toY, item).then(newChunk => {
+          chunk.removeItem(round(fromX), round(fromY))
+          if (chunk.chunkName !== newChunk.chunkName) {
+            // item's chunk is changed, maybe can async
+            return this.loadNearChunks(chunkOffset(toX), chunkOffset(toY))
+              .then(() => item)
+          }
+          return item
+        })
+      })
+  }
 
-    return new Promise((resolve, reject) => {
-      const newChunk = this.getChunkByLoc(toX, toY)
-      if (!newChunk) {
-        return this.loadChunk(chunkOffset(toX), chunkOffset(toY)).then(resolve)
-      }
-      resolve(newChunk)
-    }).then(newChunk => {
+  addItem (toX, toY, item) {
+    return this.getChunkByLoc(toX, toY).then(newChunk => {
       const x = round(toX)
       const y = round(toY)
       newChunk.addItem(item, x, y)
-      chunk.removeItem(round(fromX), round(fromY))
       item.setLocalPosition(x, y)
-      if (chunk.chunkName !== newChunk.chunkName) {
-        // item's chunk is changed, maybe can async
-        return this.loadNearChunks(chunkOffset(toX), chunkOffset(toY))
-      }
+      return newChunk
     })
   }
 
   loadChunk (chunkX, chunkY) {
-    const curChunkInx = chunkLoc(chunkX, chunkY)
-    if (this.chunks[curChunkInx]) {
-      return Promise.resolve()
-    }
-    const chunk = new Chunk(chunkX, chunkY)
-    this.addChunk(chunk)
-    return chunk.loadWorld(this.chunkReader).then(() => chunk)
+    const chunkName = Chunk.getChunkName(chunkX, chunkY)
+    return this.chunks[chunkName]
   }
 
   loadNearChunks (chunkX, chunkY) {
@@ -67,22 +83,15 @@ class World {
     return Promise.all(loaders)
   }
 
-  addChunk (chunk) {
-    this.chunks[chunkLoc(chunk.offsetX, chunk.offsetY)] = chunk
-    chunk.setStage(this)
-  }
-
   getChunkItem (x, y) {
-    const chunk = this.getChunkByLoc(x, y)
-    if (!chunk) {
-      return
-    }
-    return chunk.getItem(round(x), round(y))
+    return this.getChunkByLoc(x, y).then(chunk => {
+      return chunk.getItem(round(x), round(y))
+    })
   }
 
   getChunkByLoc (x, y) {
-    const chunkInx = chunkLoc(chunkOffset(x), chunkOffset(y))
-    return this.chunks[chunkInx]
+    const chunkName = Chunk.getChunkName(chunkOffset(x), chunkOffset(y))
+    return this.chunks[chunkName]
   }
 
   save () {
@@ -91,13 +100,14 @@ class World {
     )
       .then(chunks => {
         const processes = []
-        chunks.forEach(chunk => {
-          const data = chunk.export()
-          processes.push(
-            this.chunkReader.saveData(chunk.chunkName, data)
-              .catch(err => console.log(err))
-          )
-        })
+        // chunks.forEach(chunk => {
+        //   const data = chunk.export()
+        //   processes.push(
+        //     this.chunkReader
+        //       .saveData(chunk.chunkName, data)
+        //       .catch(err => console.log(err))
+        //   )
+        // })
         return processes
       })
       .then(chunks => {
