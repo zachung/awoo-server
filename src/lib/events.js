@@ -19,13 +19,13 @@ const syncWorld = game => {
 
 export default game => {
   return socket => {
-    socket.on('new-player', name => {
+    socket.on('new_player', name => {
       logger.info(`Well come back [${playerName(name)}]`)
       game
         .addPlayer({ name, x: 16, y: 16 })
         .then(player => {
           socket.player = player
-          socket.emit('in-game', {
+          socket.emit('in_game', {
             x: player.globalX,
             y: player.globalY
           })
@@ -33,18 +33,26 @@ export default game => {
         .catch(err => {
           console.log(err)
         })
-      socket.on('sync-world', (chunkName, cb) => {
+      socket.on('sync_world', (chunkName, cb) => {
         syncWorld(game)([chunkName]).then(cb)
       })
       socket.on('move', ({ name, x, y }) => {
         const player = game.players[name]
-        const chunksChanged = [player.chunk.chunkName]
-        game.world.move(player.globalX, player.globalY, x, y).then(player => {
-          chunksChanged.push(player.chunk.chunkName)
-          syncWorld(game)(chunksChanged).then(exports => {
-            socket.emit('sync-world', exports)
-          })
-          // TODO: broadcast to every player
+        const fromX = player.globalX
+        const fromY = player.globalY
+        game.world.move(fromX, fromY, x, y).then(player => {
+          // update blocks
+          Promise.all([
+            game.world.getChunkItem(fromX, fromY),
+            game.world.getChunkItem(x, y),
+          ])
+            .then(items => {
+              const data = []
+              items.forEach(item => data.push(item.toData()))
+              socket.emit('sync_blocks', data)
+              // broadcast to every player
+              socket.broadcast.emit('sync_blocks', data)
+            })
         })
       })
       socket.on('disconnect', () => {

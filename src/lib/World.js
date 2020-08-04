@@ -1,4 +1,5 @@
 import { Chunk } from 'awoo-core'
+import logger from './Logger'
 
 const ChunkSize = 32
 const round = p => ((p % ChunkSize) + ChunkSize) % ChunkSize
@@ -43,7 +44,7 @@ class World {
         if (isEmpty(item)) {
           throw Error(`someone try to move air(${fromX}, ${fromY}) to (${toX}, ${toY})`)
         }
-        console.log(`item from (${item.x}, ${item.y}) moving to (${toX}, ${toY})`)
+        console.log(`item from (${fromX}, ${fromY}) moving to (${toX}, ${toY})`)
         const chunk = item.chunk
         return this.addItem(toX, toY, item).then(newChunk => {
           chunk.removeItem(round(fromX), round(fromY))
@@ -81,6 +82,9 @@ class World {
       }
     }
     return Promise.all(loaders)
+      .catch(err => {
+        logger.error(err.message)
+      })
   }
 
   getChunkItem (x, y) {
