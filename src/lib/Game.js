@@ -61,6 +61,7 @@ class Game {
       type: 2,
       id: 0
     })
+    player.props['name'] = name
     this.players[name] = player
     return this.world.addItem(x, y, player).then(() => player)
   }

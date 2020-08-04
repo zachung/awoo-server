@@ -36,7 +36,7 @@ export default game => {
       socket.on('sync_world', (chunkName, cb) => {
         syncWorld(game)([chunkName]).then(cb)
       })
-      socket.on('move', ({ name, x, y }) => {
+      socket.on('move', ({ name, x, y }, cb) => {
         const player = game.players[name]
         const fromX = player.globalX
         const fromY = player.globalY
@@ -52,11 +52,20 @@ export default game => {
               socket.emit('sync_blocks', data)
               // broadcast to every player
               socket.broadcast.emit('sync_blocks', data)
+              cb()
             })
-        })
+        }).catch(cb)
       })
       socket.on('disconnect', () => {
         logger.info(`Say goodbye to [${playerName(name)}]`)
+        const player = game.players[name]
+        const x = player.globalX
+        const y = player.globalY
+        game.world.removeItem(x, y)
+        // broadcast to every player
+        game.world.getChunkItem(x, y).then(item => {
+          socket.broadcast.emit('sync_blocks', [item.toData()])
+        })
       })
     })
   }

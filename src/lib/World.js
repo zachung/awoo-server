@@ -44,7 +44,7 @@ class World {
         if (isEmpty(item)) {
           throw Error(`someone try to move air(${fromX}, ${fromY}) to (${toX}, ${toY})`)
         }
-        console.log(`item from (${fromX}, ${fromY}) moving to (${toX}, ${toY})`)
+        console.log(`item from (${fromX}, ${fromY}) try moving to (${toX}, ${toY})`)
         const chunk = item.chunk
         return this.addItem(toX, toY, item).then(newChunk => {
           chunk.removeItem(round(fromX), round(fromY))
@@ -65,6 +65,12 @@ class World {
       newChunk.addItem(item, x, y)
       item.setLocalPosition(x, y)
       return newChunk
+    })
+  }
+
+  removeItem (fromX, fromY) {
+    return this.getChunkByLoc(fromX, fromY).then(chunk => {
+      chunk.removeItem(round(fromX), round(fromY))
     })
   }
 
