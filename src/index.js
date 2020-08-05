@@ -1,13 +1,17 @@
 import { createServer } from 'http'
 import Server from 'socket.io'
+import dotenv from 'dotenv'
 import Game from './lib/Game'
-import events from './lib/events'
+
+dotenv.config()
 
 const game = new Game()
-game.start()
-
 const server = createServer()
 const io = new Server(server)
 
-io.on('connect', events(game))
+game.listen(io)
+game.start({
+  debug: process.env.DEBUG
+})
+
 server.listen(3000)

@@ -13,8 +13,19 @@ const chunksHandler = reader => {
       if (!target[chunkName]) {
         const chunk = Chunk.fromName(chunkName)
         target[chunkName] = chunk
-        // TODO: handle missed chunk
         return chunk.loadWorld(reader).then(() => chunk)
+          .catch(err => {
+            // handle missed chunk
+            logger.info(`initialing ${chunkName}..`)
+            return reader.saveData(chunkName, {
+              grounds: [],
+              items: []
+            }).then(() => {
+              const chunk = Chunk.fromName(chunkName)
+              target[chunkName] = chunk
+              return chunk.loadWorld(reader).then(() => chunk)
+            })
+          })
       }
       return Promise.resolve(target[chunkName])
     }
@@ -44,7 +55,7 @@ class World {
         if (isEmpty(item)) {
           throw Error(`someone try to move air(${fromX}, ${fromY}) to (${toX}, ${toY})`)
         }
-        console.log(`item from (${fromX}, ${fromY}) try moving to (${toX}, ${toY})`)
+        logger.debug(`item from (${fromX}, ${fromY}) try moving to (${toX}, ${toY})`)
         const chunk = item.chunk
         return this.addItem(toX, toY, item).then(newChunk => {
           chunk.removeItem(round(fromX), round(fromY))

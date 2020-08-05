@@ -2,6 +2,7 @@ import World from './World'
 import FileChunkReader from './FileChunkReader'
 import logger from './Logger'
 import { Item } from 'awoo-core'
+import Messenger from './Messenger'
 
 const SaveDelayMicroSeconds = 10000
 
@@ -17,10 +18,11 @@ class Game {
     this.players = {}
   }
 
-  start () {
+  start (options) {
     if (this.isStart) {
       return
     }
+    logger.level = options.debug ? 'debug' : 'info'
     return this.world
       .loadChunk(0, 0)
       .then(() => this.worldSaveLoop())
@@ -47,6 +49,10 @@ class Game {
     this.isStart = true
   }
 
+  listen (io) {
+    this.messenger = new Messenger(this, io)
+  }
+
   /**
    * @param name
    * @param x
@@ -61,9 +67,10 @@ class Game {
       type: 2,
       id: 0
     })
-    player.props['name'] = name
-    this.players[name] = player
-    return this.world.addItem(x, y, player).then(() => player)
+    return this.world.addItem(x, y, player).then(() => {
+      this.players[name] = player
+      return player
+    })
   }
 }
 

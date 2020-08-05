@@ -1,11 +1,11 @@
-import { createLogger, format, transports, config, info } from 'winston'
+import { createLogger, format, transports } from 'winston'
 import chalk from 'chalk'
 
 const { combine, timestamp, label, printf } = format
-const { npm: { levels } } = config
 
 const myFormat = printf(({ level, message, label, timestamp }) => {
   let colors = {
+    'debug': chalk.green,
     'info': chalk.blue,
     'error': chalk.red
   }
@@ -27,10 +27,4 @@ const logger = createLogger({
   exitOnError: false
 })
 
-const systemLogger = new Proxy({}, {
-  get (target, name) {
-    return logger[name]
-  }
-})
-
-export default systemLogger
+export default logger
