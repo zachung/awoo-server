@@ -3,12 +3,8 @@ import chalk from 'chalk'
 
 const playerName = chalk.bold.green
 
-const addPlayer = (game, name) => {
-  const randomPoint = () => Math.floor(Math.random() * 6) + 10
-  const x = randomPoint()
-  const y = randomPoint()
-  return game.addPlayer({ name, x, y }).catch(() => addPlayer(game, name))
-}
+const addPlayer = (game, name) =>
+  game.addPlayer({ name }).catch(() => addPlayer(game, name))
 
 /** @this Messenger */
 export default function (socket, game, name) {
@@ -18,4 +14,4 @@ export default function (socket, game, name) {
     socket.player = player
     this.inGame(player)
   })
-};
+}

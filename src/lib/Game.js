@@ -6,6 +6,8 @@ import Messenger from './Messenger'
 
 const SaveDelayMicroSeconds = 10000
 
+const players = []
+
 /**
  * @property {World} world
  */
@@ -30,7 +32,8 @@ class Game {
   }
 
   worldSaveLoop () {
-    return this.world.save()
+    return this.world
+      .save()
       .then(() => {
         logger.info('world saved')
       })
@@ -55,11 +58,9 @@ class Game {
 
   /**
    * @param name
-   * @param x
-   * @param y
    * @returns {Promise<Item>}
    */
-  addPlayer ({ name, x, y }) {
+  addPlayer ({ name }) {
     if (this.players[name]) {
       return Promise.resolve(this.players[name])
     }
@@ -67,10 +68,47 @@ class Game {
       type: 2,
       id: 0
     })
-    return this.world.addItem(x, y, player).then(() => {
-      this.players[name] = player
-      return player
-    })
+    if (!players[name]) {
+      const randomPoint = () => Math.floor(Math.random() * 6) + 10
+      const x = randomPoint()
+      const y = randomPoint()
+      // record player's position
+      players[name] = { x, y }
+    }
+    const { x, y } = players[name]
+
+    return this.world
+      .addItem(x, y, player)
+      .catch(() => {
+        // 與其他物件重疊，向x軸位移
+        players[name].x++
+        return this.addPlayer({ name })
+      })
+      .then(() => {
+        this.players[name] = player
+        return player
+      })
+  }
+
+  removePlayer ({ name }) {
+    const player = this.players[name]
+    if (!player) {
+      return
+    }
+    const x = player.globalX
+    const y = player.globalY
+    // broadcast to every player
+    this.world
+      .removeItem(x, y)
+      .then(() =>
+        this.world
+          .getChunkItem(x, y)
+          .then(item => this.messenger.syncBlocks([item.toData()]))
+      )
+      .then(() => {
+        delete this.players[name]
+        players[name] = { x, y }
+      })
   }
 }
 
