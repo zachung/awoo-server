@@ -14,4 +14,4 @@ game.start({
   debug: process.env.DEBUG
 })
 
-server.listen(3000)
+server.listen(process.env.PORT)
