@@ -12,6 +12,7 @@ class Messenger {
       disconnect
     }
 
+    this.io = io
     io.on('connect', socket => {
       this.socket = socket
       for (const name in events) {
@@ -28,7 +29,7 @@ class Messenger {
   }
 
   syncBlocks (itemDataArray) {
-    this.socket.broadcast.emit('sync_blocks', itemDataArray)
+    this.io.emit('sync_blocks', itemDataArray)
   }
 }
 

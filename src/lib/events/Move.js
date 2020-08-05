@@ -13,8 +13,6 @@ export default function (socket, game, { name, x, y }, cb) {
       ]).then(items => {
         const data = []
         items.forEach(item => data.push(item.toData()))
-        // TODO: update by client
-        socket.emit('sync_blocks', data)
         this.syncBlocks(data)
         cb()
       })

@@ -1,4 +1,4 @@
-import { Chunk } from 'awoo-core'
+import { Chunk } from '../../../awoo-core/lib/index'
 import logger from './Logger'
 
 const ChunkSize = 32
