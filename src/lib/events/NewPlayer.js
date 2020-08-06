@@ -7,11 +7,17 @@ const addPlayer = (game, name) =>
   game.addPlayer({ name }).catch(() => addPlayer(game, name))
 
 /** @this Messenger */
-export default function (socket, game, name) {
+export default function (socket, game, name, cb) {
   logger.info(`Well come back [${playerName(name)}]`)
-  addPlayer(game, name).then(player => {
-    player.props.name = name
-    socket.player = player
-    this.inGame(player)
-  })
+  game
+    .addPlayer({ name })
+    .then(player => {
+      player.props.name = name
+      socket.player = player
+      cb(null, {
+        x: player.globalX,
+        y: player.globalY,
+      })
+    })
+    .catch(cb)
 }

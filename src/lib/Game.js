@@ -62,7 +62,7 @@ class Game {
    */
   addPlayer ({ name }) {
     if (this.players[name]) {
-      return Promise.resolve(this.players[name])
+      return Promise.reject(`${name} already online`)
     }
     const player = new Item({
       type: 2,
@@ -73,7 +73,7 @@ class Game {
       const x = randomPoint()
       const y = randomPoint()
       // record player's position
-      players[name] = { x, y }
+      players[name] = { x, y, online: true }
     }
     const { x, y } = players[name]
 
@@ -107,7 +107,7 @@ class Game {
       )
       .then(() => {
         delete this.players[name]
-        players[name] = { x, y }
+        players[name] = { x, y, online: false }
       })
   }
 }
