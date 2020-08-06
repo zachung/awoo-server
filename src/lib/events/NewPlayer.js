@@ -14,6 +14,7 @@ export default function (socket, game, name, cb) {
     .then(player => {
       player.props.name = name
       socket.player = player
+      this.broadcastOnlineCount(game.playerCount)
       cb(null, {
         x: player.globalX,
         y: player.globalY,

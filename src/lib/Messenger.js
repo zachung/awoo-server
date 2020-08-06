@@ -2,6 +2,7 @@ import new_player from './events/NewPlayer'
 import sync_world from './events/SyncWorld'
 import move from './events/Move'
 import disconnect from './events/Disconnect'
+import say from './events/Say'
 
 class Messenger {
   constructor (game, io) {
@@ -9,7 +10,8 @@ class Messenger {
       new_player,
       sync_world,
       move,
-      disconnect
+      disconnect,
+      say
     }
 
     this.io = io
@@ -30,6 +32,14 @@ class Messenger {
 
   syncBlocks (itemDataArray) {
     this.io.emit('sync_blocks', itemDataArray)
+  }
+
+  say ({ name, message }) {
+    this.io.emit('message', { name, message })
+  }
+
+  broadcastOnlineCount (count) {
+    this.io.emit('current_online', count)
   }
 }
 

@@ -12,4 +12,5 @@ export default function (socket, game) {
   const name = player.props.name
   logger.info(`Say goodbye to [${playerName(name)}]`)
   game.removePlayer({ name })
+    .then(() => this.broadcastOnlineCount(game.playerCount))
 };

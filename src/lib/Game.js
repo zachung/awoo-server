@@ -20,6 +20,10 @@ class Game {
     this.players = {}
   }
 
+  get playerCount() {
+    return Object.keys(this.players).length
+  }
+
   start (options) {
     if (this.isStart) {
       return
@@ -61,6 +65,9 @@ class Game {
    * @returns {Promise<Item>}
    */
   addPlayer ({ name }) {
+    if (name.length > 10) {
+      return Promise.reject(`name is invalid`)
+    }
     if (this.players[name]) {
       return Promise.reject(`${name} already online`)
     }
@@ -98,7 +105,7 @@ class Game {
     const x = player.globalX
     const y = player.globalY
     // broadcast to every player
-    this.world
+    return this.world
       .removeItem(x, y)
       .then(() =>
         this.world
