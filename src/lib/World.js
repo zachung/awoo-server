@@ -97,19 +97,20 @@ class World {
   }
 
   save () {
-    return Promise.resolve(
-      Object.values(this.chunks).filter(chunk => chunk.isDirty)
+    return Promise.all(
+      Object.values(this.chunks)
     )
       .then(chunks => {
+        chunks = chunks.filter(chunk => chunk.isDirty)
         const processes = []
-        // chunks.forEach(chunk => {
-        //   const data = chunk.export()
-        //   processes.push(
-        //     this.chunkReader
-        //       .saveData(chunk.chunkName, data)
-        //       .catch(err => console.log(err))
-        //   )
-        // })
+        chunks.forEach(chunk => {
+          const data = chunk.export()
+          processes.push(
+            this.chunkReader
+              .saveData(chunk.chunkName, data)
+              .catch(err => console.log(err))
+          )
+        })
         return processes
       })
       .then(chunks => {
