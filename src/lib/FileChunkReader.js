@@ -1,5 +1,6 @@
 import fs from 'fs'
-import { ChunkReader } from 'awoo-core'
+import { Chunk, ChunkReader } from 'awoo-core'
+import logger from './Logger'
 
 const saveFolder = 'save/'
 const defaultFolder = 'world/'
@@ -42,6 +43,37 @@ class FileChunkReader extends ChunkReader {
       fs.writeFile(path, JSON.stringify(data), reject)
       resolve()
     })
+  }
+
+  chunkHandler () {
+    /**
+     * @type {FileChunkReader|ChunkReader}
+     */
+    const reader = this
+    return {
+      get (target, chunkName, receiver) {
+        if (!target[chunkName]) {
+          const chunk = Chunk.fromName(chunkName)
+          target[chunkName] = chunk
+          return chunk
+            .loadWorld(reader)
+            .then(() => chunk)
+            .catch(err => {
+              // handle missed chunk
+              logger.info(`initialing ${chunkName}..`)
+              return reader.saveData(chunkName, {
+                grounds: [],
+                items: []
+              }).then(() => {
+                const chunk = Chunk.fromName(chunkName)
+                target[chunkName] = chunk
+                return chunk.loadWorld(reader).then(() => chunk)
+              })
+            })
+        }
+        return Promise.resolve(target[chunkName])
+      }
+    }
   }
 }
 

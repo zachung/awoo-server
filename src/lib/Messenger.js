@@ -3,6 +3,7 @@ import sync_world from './events/SyncWorld'
 import move from './events/Move'
 import disconnect from './events/Disconnect'
 import say from './events/Say'
+import command from './events/Command'
 
 class Messenger {
   constructor (game, io) {
@@ -11,7 +12,8 @@ class Messenger {
       sync_world,
       move,
       disconnect,
-      say
+      say,
+      command
     }
 
     this.io = io
@@ -20,13 +22,6 @@ class Messenger {
       for (const name in events) {
         socket.on(name, events[name].bind(this, socket, game))
       }
-    })
-  }
-
-  inGame (player) {
-    this.socket.emit('in_game', {
-      x: player.globalX,
-      y: player.globalY
     })
   }
 

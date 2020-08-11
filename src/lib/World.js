@@ -8,41 +8,12 @@ const chunkOffset = p => Math.floor(p / ChunkSize)
 
 const isEmpty = item => item.type === undefined
 
-const chunksHandler = reader => {
-  return {
-    get (target, chunkName, receiver) {
-      if (!target[chunkName]) {
-        const chunk = Chunk.fromName(chunkName)
-        target[chunkName] = chunk
-        return chunk
-          .loadWorld(reader)
-          .then(() => chunk)
-          .catch(err => {
-            // handle missed chunk
-            logger.info(`initialing ${chunkName}..`)
-            return reader
-              .saveData(chunkName, {
-                grounds: [],
-                items: []
-              })
-              .then(() => {
-                const chunk = Chunk.fromName(chunkName)
-                target[chunkName] = chunk
-                return chunk.loadWorld(reader).then(() => chunk)
-              })
-          })
-      }
-      return Promise.resolve(target[chunkName])
-    }
-  }
-}
-
 /**
  * @property {FileChunkReader} chunkReader
  */
 class World {
   constructor ({ chunkReader }) {
-    this.chunks = new Proxy({}, chunksHandler(chunkReader))
+    this.chunks = new Proxy({}, chunkReader.chunkHandler())
     this.chunkReader = chunkReader
   }
 
