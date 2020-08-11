@@ -1,5 +1,6 @@
 import { Chunk } from 'awoo-core'
 import logger from './Logger'
+import MoveException from './exceptions/MoveException'
 
 const ChunkSize = 32
 const round = p => ((p % ChunkSize) + ChunkSize) % ChunkSize
@@ -13,18 +14,22 @@ const chunksHandler = reader => {
       if (!target[chunkName]) {
         const chunk = Chunk.fromName(chunkName)
         target[chunkName] = chunk
-        return chunk.loadWorld(reader).then(() => chunk)
+        return chunk
+          .loadWorld(reader)
+          .then(() => chunk)
           .catch(err => {
             // handle missed chunk
             logger.info(`initialing ${chunkName}..`)
-            return reader.saveData(chunkName, {
-              grounds: [],
-              items: []
-            }).then(() => {
-              const chunk = Chunk.fromName(chunkName)
-              target[chunkName] = chunk
-              return chunk.loadWorld(reader).then(() => chunk)
-            })
+            return reader
+              .saveData(chunkName, {
+                grounds: [],
+                items: []
+              })
+              .then(() => {
+                const chunk = Chunk.fromName(chunkName)
+                target[chunkName] = chunk
+                return chunk.loadWorld(reader).then(() => chunk)
+              })
           })
       }
       return Promise.resolve(target[chunkName])
@@ -50,23 +55,29 @@ class World {
    * @returns {Promise<Item>}
    */
   move (fromX, fromY, toX, toY) {
-    return this.getChunkItem(fromX, fromY)
-      .then(item => {
-        if (isEmpty(item)) {
-          throw Error(`someone try to move air(${fromX}, ${fromY}) to (${toX}, ${toY})`)
-        }
-        logger.debug(`item from (${fromX}, ${fromY}) try moving to (${toX}, ${toY})`)
-        const chunk = item.chunk
-        return this.addItem(toX, toY, item).then(newChunk => {
+    return this.getChunkItem(fromX, fromY).then(item => {
+      const message = `(${fromX}, ${fromY}) to (${toX}, ${toY})`
+      if (isEmpty(item)) {
+        throw new MoveException(`someone try to move air ${message}`)
+      }
+      const name = item.props.name
+      logger.debug(`[${name}] try moving from ${message}`)
+      const chunk = item.chunk
+      return this.addItem(toX, toY, item)
+        .then(newChunk => {
           chunk.removeItem(round(fromX), round(fromY))
           if (chunk.chunkName !== newChunk.chunkName) {
             // item's chunk is changed, maybe can async
-            return this.loadNearChunks(chunkOffset(toX), chunkOffset(toY))
-              .then(() => item)
+            return this.loadNearChunks(chunkOffset(toX), chunkOffset(toY)).then(
+              () => item
+            )
           }
           return item
         })
-      })
+        .catch(err => {
+          throw new MoveException(err, item)
+        })
+    })
   }
 
   addItem (toX, toY, item) {
@@ -98,10 +109,9 @@ class World {
         loaders.push(this.loadChunk(x, y))
       }
     }
-    return Promise.all(loaders)
-      .catch(err => {
-        logger.error(err.message)
-      })
+    return Promise.all(loaders).catch(err => {
+      logger.error(err.message)
+    })
   }
 
   getChunkItem (x, y) {
