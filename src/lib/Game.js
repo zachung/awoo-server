@@ -3,10 +3,9 @@ import FileChunkReader from './FileChunkReader'
 import logger from './Logger'
 import { Item } from 'awoo-core'
 import Messenger from './Messenger'
+import db from '../db/Db'
 
 const SaveDelayMicroSeconds = 10000
-
-const players = []
 
 /**
  * @property {World} world
@@ -20,7 +19,7 @@ class Game {
     this.players = {}
   }
 
-  get playerCount() {
+  get playerCount () {
     return Object.keys(this.players).length
   }
 
@@ -71,30 +70,41 @@ class Game {
     if (this.players[name]) {
       return Promise.reject(`${name} already online`)
     }
-    const player = new Item({
-      type: 2,
-      id: 0
-    })
-    if (!players[name]) {
+    const user = db.getUser(name)
+    let player, x, y
+    if (user) {
+      // 先前已建立的用戶
+      player = Item.fromData(user.itemData)
+      x = player.globalX
+      y = player.globalY
+    } else {
+      // new player
       const randomPoint = () => Math.floor(Math.random() * 6) + 10
-      const x = randomPoint()
-      const y = randomPoint()
-      // record player's position
-      players[name] = { x, y, online: true }
+      x = randomPoint()
+      y = randomPoint()
+      player = new Item({
+        type: 2,
+        id: 0,
+        props: {
+          name
+        }
+      })
     }
-    const { x, y } = players[name]
 
-    return this.world
-      .addItem(x, y, player)
-      .catch(() => {
-        // 與其他物件重疊，向x軸位移
-        players[name].x++
-        return this.addPlayer({ name })
-      })
-      .then(() => {
-        this.players[name] = player
-        return player
-      })
+    const addPlayer = (player, x, y) => {
+      return this.world
+        .addItem(x, y, player)
+        .catch(() => {
+          // 與其他物件重疊，向x軸位移
+          return addPlayer(player, x + 1, y)
+        })
+        .then(() => {
+          this.players[name] = player
+          db.updateUser(name, player.toData())
+          return player
+        })
+    }
+    return addPlayer(player, x, y)
   }
 
   removePlayer ({ name }) {
@@ -114,7 +124,6 @@ class Game {
       )
       .then(() => {
         delete this.players[name]
-        players[name] = { x, y, online: false }
       })
   }
 }

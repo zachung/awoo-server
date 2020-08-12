@@ -1,9 +1,11 @@
-import Move from '../commands/Move'
-import Set from '../commands/Set'
+import move from '../commands/Move'
+import set from '../commands/Set'
+import announce from '../commands/Announce'
 
 const commands = {
-  move: Move,
-  set: Set
+  move,
+  set,
+  announce
 }
 
 /** @this Messenger */

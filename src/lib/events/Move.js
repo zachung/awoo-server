@@ -1,4 +1,5 @@
 import MoveException from '../exceptions/MoveException'
+import db from '../../db/Db'
 
 const changeFace = (fromX, fromY, toX, toY) => {
   const dx = toX - fromX
@@ -41,6 +42,9 @@ export default function (socket, game, { name, x, y }, cb) {
         const data = []
         items.forEach(item => data.push(item.toData()))
         this.syncBlocks(data)
+        // 存放用戶資料
+        db.updateUser(name, player.toData())
+        // 回呼
         cb()
       })
     })
@@ -56,6 +60,7 @@ export default function (socket, game, { name, x, y }, cb) {
         }
         err = err.message
       }
+      // 回呼失敗原因
       cb(err)
     })
 }
