@@ -87,6 +87,13 @@ class Db {
       .assign({ subscription })
       .write()
   }
+
+  getSubscriptions() {
+    return this.db
+      .get(Users)
+      .map('subscription')
+      .value()
+  }
 }
 
 const db = new Db()

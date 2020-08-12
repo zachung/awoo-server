@@ -2,6 +2,7 @@ import { createServer } from 'http'
 import Server from 'socket.io'
 import dotenv from 'dotenv'
 import Game from './lib/Game'
+import Announce from './lib/commands/announce'
 
 dotenv.config()
 

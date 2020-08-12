@@ -1,6 +1,6 @@
-import move from '../commands/Move'
-import set from '../commands/Set'
-import announce from '../commands/Announce'
+import move from '../commands/move'
+import set from '../commands/set'
+import announce from '../commands/announce'
 
 const commands = {
   move,

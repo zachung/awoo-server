@@ -1,9 +1,10 @@
-import new_player from './events/NewPlayer'
-import sync_world from './events/SyncWorld'
-import move from './events/Move'
-import disconnect from './events/Disconnect'
-import say from './events/Say'
-import command from './events/Command'
+import new_player from './events/new_player'
+import sync_world from './events/sync_world'
+import move from './events/move'
+import disconnect from './events/disconnect'
+import say from './events/say'
+import command from './events/command'
+import subscription from './events/subscription'
 
 class Messenger {
   constructor (game, io) {
@@ -13,7 +14,8 @@ class Messenger {
       move,
       disconnect,
       say,
-      command
+      command,
+      subscription
     }
 
     this.io = io
