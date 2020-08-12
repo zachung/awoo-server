@@ -105,6 +105,8 @@ class World {
         const processes = []
         chunks.forEach(chunk => {
           const data = chunk.export()
+          // dont save user
+          delete data.items['2:0']
           processes.push(
             this.chunkReader
               .saveData(chunk.chunkName, data)
