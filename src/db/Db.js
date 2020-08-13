@@ -93,6 +93,7 @@ class Db {
       .get(Users)
       .map('subscription')
       .value()
+      .filter(sub => sub != null)
   }
 }
 
