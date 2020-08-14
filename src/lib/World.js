@@ -107,6 +107,8 @@ class World {
           const data = chunk.export()
           // dont save user
           delete data.items['2:0']
+          // dont save air
+          delete data.items['0:0']
           processes.push(
             this.chunkReader
               .saveData(chunk.chunkName, data)
